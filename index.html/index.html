@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>0
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionCivic - Team Hacker Slayer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .ai-scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #3B82F6;
+            box-shadow: 0 0 10px #3B82F6;
+            animation: scan 2s infinite linear;
+            display: none;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom scrollbar */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Settings Dropdown Animation */
+        .settings-dropdown {
+            transform-origin: top right;
+            transition: all 0.2s ease-out;
+        }
+        .settings-dropdown.hidden {
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .settings-dropdown.visible {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 transition-colors duration-300">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 theme-bg-primary bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold transition-colors duration-300">
+                        <i class="fa-solid fa-city"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-slate-900">Vision<span class="theme-text-primary text-blue-600 transition-colors duration-300">Civic</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium">
+                    <a href="#home" class="text-slate-600 hover:text-blue-600 transition" data-i18n="nav_overview">Overview</a>
+                    <a href="#how-it-works" class="text-slate-600 hover:text-blue-600 transition" data-i18n="nav_how">How It Works</a>
+                    <a href="#differentiators" class="text-slate-600 hover:text-blue-600 transition" data-i18n="nav_why">Why Us?</a>
+                    <a href="#tech-stack" class="text-slate-600 hover:text-blue-600 transition" data-i18n="nav_tech">Google Tech Stack</a>
+                </div>
+                <div class="flex items-center gap-3 relative">
+                    <button onclick="scrollToDemo()" class="theme-bg-primary bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium transition shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-camera"></i> <span data-i18n="btn_demo">Live Demo</span>
+                    </button>
+                    
+                    <!-- Settings Button -->
+                    <button onclick="toggleSettings()" class="bg-white border border-slate-200 text-slate-600 w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-50 transition shadow-sm">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <!-- Settings Dropdown -->
+                    <div id="settings-menu" class="settings-dropdown hidden absolute top-12 right-0 w-64 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Settings</h4>
+                        
+                        <!-- Language -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Language</label>
+                            <select onchange="changeLanguage(this.value)" class="w-full text-sm border-slate-200 rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="en">English</option>
+                                <option value="hi">Hindi (हिंदी)</option>
+                                <option value="ur">Urdu (اردو)</option>
+                                <option value="ko">Korean (한국어)</option>
+                                <option value="ru">Russian (Русский)</option>
+                            </select>
+                        </div>
+
+                        <!-- Theme -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Theme</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="changeTheme('modern')" class="flex flex-col items-center gap-1 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+                                    <div class="w-6 h-6 rounded-full bg-blue-600"></div>
+                                    <span class="text-[10px] text-slate-500">Modern</span>
+                                </button>
+                                <button onclick="changeTheme('classic')" class="flex flex-col items-center gap-1 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+                                    <div class="w-6 h-6 rounded-full bg-slate-700"></div>
+                                    <span class="text-[10px] text-slate-500">Classic</span>
+                                </button>
+                                <button onclick="changeTheme('pinkish')" class="flex flex-col items-center gap-1 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+                                    <div class="w-6 h-6 rounded-full bg-pink-500"></div>
+                                    <span class="text-[10px] text-slate-500">Pinkish</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-32 pb-20 bg-gradient-to-br from-slate-50 via-blue-50 to-white overflow-hidden relative theme-hero-bg transition-colors duration-300">
+        <div class="absolute top-0 right-0 w-1/3 h-full bg-blue-100/30 skew-x-12 transform origin-top-right theme-hero-accent"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <div class="inline-block px-3 py-1 theme-bg-light bg-blue-100 theme-text-primary text-blue-700 rounded-full text-xs font-semibold tracking-wide mb-4">TEAM HACKER SLAYER</div>
+                <h1 class="text-4xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+                    <span data-i18n="hero_title_1">Transforming Civic Participation into</span> <br> <span class="text-transparent bg-clip-text bg-gradient-to-r theme-gradient-from from-blue-600 theme-gradient-to to-indigo-600" data-i18n="hero_title_2">Actionable Governance.</span>
+                </h1>
+                <p class="text-lg text-slate-600 mb-8 leading-relaxed" data-i18n="hero_desc">
+                    A computer vision-based infrastructure reporting system. We don't just collect complaints; we verify them with AI, enforce SLA accountability, and ensure resolution with "Proof of Fix" validation.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="scrollToDemo()" class="bg-slate-900 text-white px-8 py-3.5 rounded-lg font-medium hover:bg-slate-800 transition shadow-lg flex items-center justify-center gap-2">
+                        <span data-i18n="btn_try_mvp">Try the MVP</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button onclick="document.getElementById('how-it-works').scrollIntoView()" class="bg-white text-slate-700 border border-slate-300 px-8 py-3.5 rounded-lg font-medium hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                        <span data-i18n="btn_how_works">How It Works</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works / Progress Panel Section -->
+    <section id="how-it-works" class="py-16 bg-white border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900" data-i18n="section_workflow_title">Transparent Resolution Workflow</h2>
+                <p class="text-slate-500 mt-2" data-i18n="section_workflow_desc">Track the journey of a complaint from upload to fix.</p>
+            </div>
+
+            <div class="relative">
+                <!-- Connecting Line (Desktop) -->
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+                    <!-- Step 1 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center transform hover:-translate-y-1 transition duration-300">
+                        <div class="w-14 h-14 theme-bg-light bg-blue-100 theme-text-primary text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border-4 border-white shadow-sm">
+                            <i class="fa-solid fa-upload"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800 mb-2">1. Submitted</h3>
+                        <p class="text-sm text-slate-500">Citizen uploads photo. GPS & Time are auto-captured.</p>
+                        <div class="mt-4 inline-block px-3 py-1 theme-bg-light bg-blue-50 theme-text-primary text-blue-700 text-xs font-bold rounded-full">Status: Open</div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center transform hover:-translate-y-1 transition duration-300">
+                        <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border-4 border-white shadow-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800 mb-2">2. AI Verified</h3>
+                        <p class="text-sm text-slate-500">System checks for deepfakes, duplicates & location mismatch.</p>
+                        <div class="mt-4 inline-block px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full">Status: Verified</div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center transform hover:-translate-y-1 transition duration-300">
+                        <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border-4 border-white shadow-sm">
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800 mb-2">3. In Progress</h3>
+                        <p class="text-sm text-slate-500">Authority assigned. SLA countdown begins.</p>
+                        <div class="mt-4 inline-block px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-full">Status: Action Taken</div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center transform hover:-translate-y-1 transition duration-300">
+                        <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border-4 border-white shadow-sm">
+                            <i class="fa-solid fa-check-double"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800 mb-2">4. Resolved</h3>
+                        <p class="text-sm text-slate-500">Proof of fix uploaded and verified. Citizen notified.</p>
+                        <div class="mt-4 inline-block px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Status: Closed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Differentiators Section (From PDF Page 3) -->
+    <section id="differentiators" class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900" data-i18n="section_diff_title">How We Are Different</h2>
+                <p class="text-slate-500 mt-2">Moving beyond simple complaint collection.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Diff 1 -->
+                <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:shadow-lg transition">
+                    <div class="w-12 h-12 theme-bg-light bg-blue-100 theme-text-primary text-blue-600 rounded-xl flex items-center justify-center mb-4 text-xl">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Action-Oriented</h3>
+                    <p class="text-slate-600 text-sm">We don't stop at detection. Verified issues are instantly converted into official, SLA-bound maintenance tickets with auto-escalation.</p>
+                </div>
+                <!-- Diff 2 -->
+                <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:shadow-lg transition">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-4 text-xl">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Trust & Verification Layer</h3>
+                    <p class="text-slate-600 text-sm">Prevents spam and fake reports using AI-based image verification, GPS fencing, timestamp validation, and duplicate detection.</p>
+                </div>
+                <!-- Diff 3 -->
+                <div class="p-6 bg-white rounded-2xl border border-slate-200 hover:shadow-lg transition">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4 text-xl">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">End-to-End Accountability</h3>
+                    <p class="text-slate-600 text-sm">A ticket cannot be closed without an "After-Fix" image, which is re-verified by AI to ensure the problem is genuinely solved.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Google Tech Stack Section (From PDF Page 5) -->
+    <section id="tech-stack" class="py-20 bg-white border-y border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900" data-i18n="section_stack_title">Built on Google Cloud</h2>
+                <p class="text-slate-500 mt-2">Leveraging the full ecosystem for scalability.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Stack Item 1 -->
+                <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-100 text-center">
+                    <i class="fa-solid fa-mobile-screen text-3xl theme-text-primary text-blue-600 mb-3"></i>
+                    <h4 class="font-bold text-slate-800">Google AppSheet</h4>
+                    <p class="text-xs text-slate-500 mt-2">No-code mobile app for citizens & officers.</p>
+                </div>
+                <!-- Stack Item 2 -->
+                <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-100 text-center">
+                    <i class="fa-solid fa-eye text-3xl text-red-500 mb-3"></i>
+                    <h4 class="font-bold text-slate-800">Cloud Vision AI</h4>
+                    <p class="text-xs text-slate-500 mt-2">Fake detection, severity analysis & comparison.</p>
+                </div>
+                <!-- Stack Item 3 -->
+                <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-100 text-center">
+                    <i class="fa-solid fa-map-location text-3xl text-green-600 mb-3"></i>
+                    <h4 class="font-bold text-slate-800">Maps Platform</h4>
+                    <p class="text-xs text-slate-500 mt-2">GPS capture, issue pinning & area visualization.</p>
+                </div>
+                <!-- Stack Item 4 -->
+                <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-100 text-center">
+                    <i class="fa-solid fa-chart-line text-3xl text-yellow-500 mb-3"></i>
+                    <h4 class="font-bold text-slate-800">Looker Studio</h4>
+                    <p class="text-xs text-slate-500 mt-2">Public transparency dashboard & analytics.</p>
+                </div>
+                 <!-- Stack Item 5 -->
+                 <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-100 text-center">
+                    <i class="fa-brands fa-google text-3xl text-purple-600 mb-3"></i>
+                    <h4 class="font-bold text-slate-800">Google Forms</h4>
+                    <p class="text-xs text-slate-500 mt-2">Simplified citizen complaint submission.</p>
+                </div>
+                 <!-- Stack Item 6 -->
+                 <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-100 text-center">
+                    <i class="fa-solid fa-database text-3xl text-orange-600 mb-3"></i>
+                    <h4 class="font-bold text-slate-800">Firestore</h4>
+                    <p class="text-xs text-slate-500 mt-2">Real-time database for ticket tracking.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Application Demo Section -->
+    <section id="dashboard-demo" class="py-20 bg-slate-50 min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900" data-i18n="demo_title">Live MVP Demo</h2>
+                    <p class="text-slate-500" data-i18n="demo_desc">Experience the report-to-resolution flow.</p>
+                </div>
+                
+                <!-- Toggle View Buttons -->
+                <div class="bg-white p-1 rounded-lg shadow-sm border border-slate-200 inline-flex mt-4 md:mt-0">
+                    <button onclick="switchView('citizen')" id="btn-citizen" class="px-6 py-2 rounded-md text-sm font-medium bg-slate-100 text-slate-900 shadow-inner transition">
+                        <i class="fa-solid fa-user mr-2"></i> <span data-i18n="view_citizen">Citizen View</span>
+                    </button>
+                    <button onclick="switchView('authority')" id="btn-authority" class="px-6 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-900 transition">
+                        <i class="fa-solid fa-user-shield mr-2"></i> <span data-i18n="view_authority">Official View</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW 1: CITIZEN REPORTING APP -->
+            <div id="view-citizen" class="fade-in max-w-md mx-auto bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col h-[750px]">
+                
+                <!-- Citizen App Header -->
+                <div class="bg-slate-800 p-4 text-white text-center border-b border-slate-700 shrink-0">
+                    <h3 class="font-bold text-lg">VisionCivic</h3>
+                    <div id="header-gps" class="text-slate-400 text-xs mt-1 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-location-crosshairs theme-text-primary text-blue-400 animate-pulse"></i> 
+                        GPS Active: <span id="gps-coords">26.8467, 80.9462</span>
+                    </div>
+                </div>
+
+                <!-- Content Area (Scrollable) -->
+                <div class="flex-1 overflow-y-auto bg-slate-900 relative">
+                    
+                    <!-- TAB 1: REPORT ISSUE -->
+                    <div id="tab-report" class="p-6 pb-20">
+                        <!-- Upload Area -->
+                        <input type="file" id="file-upload" class="hidden" accept="image/*" capture="environment" onchange="handleImageUpload(event)">
+                        <div class="mb-6 relative group cursor-pointer" onclick="triggerScan()">
+                            <div id="upload-placeholder" class="border-2 border-dashed border-slate-700 rounded-xl bg-slate-800/50 h-56 flex flex-col items-center justify-center text-slate-500 group-hover:border-blue-500 group-hover:text-blue-500 transition">
+                                <i class="fa-solid fa-camera text-4xl mb-3"></i>
+                                <span class="text-sm font-medium">Tap to Report Issue</span>
+                            </div>
+                            
+                            <!-- Simulated Image Result -->
+                            <div id="image-preview" class="hidden h-56 w-full bg-black rounded-xl relative overflow-hidden">
+                                <img id="preview-img" src="" alt="Uploaded Issue" class="w-full h-full object-cover opacity-80">
+                                <div id="scanner" class="ai-scan-line"></div>
+                                
+                                <!-- AI Overlay Tags -->
+                                <div id="ai-tags" class="absolute bottom-0 left-0 w-full p-4 hidden bg-gradient-to-t from-black/90 to-transparent">
+                                    <div id="tags-container" class="flex gap-2 flex-wrap">
+                                        <!-- Dynamic tags will appear here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Verify Button -->
+                        <div id="verify-section" class="hidden mb-4">
+                            <button onclick="triggerAnalysis()" class="w-full theme-bg-primary bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Verify & Analyze
+                            </button>
+                        </div>
+
+                        <!-- Analysis Status Box -->
+                        <div id="analysis-box" class="hidden mb-6 bg-slate-800 p-4 rounded-lg border border-slate-700">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-slate-300"><i class="fa-solid fa-fingerprint text-slate-400 mr-2"></i>Deepfake Check</span>
+                                    <span id="status-deepfake" class="text-xs font-bold text-slate-500">Waiting...</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-slate-300"><i class="fa-solid fa-map-location-dot text-slate-400 mr-2"></i>Map Verification</span>
+                                    <span id="status-location" class="text-xs font-bold text-slate-500">Waiting...</span>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-slate-700 pt-2">
+                                    <span class="text-sm text-slate-300"><i class="fa-solid fa-magnifying-glass text-slate-400 mr-2"></i>Classification</span>
+                                    <span id="status-issue" class="text-xs font-bold text-slate-500">Waiting...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Message Area -->
+                        <div id="error-box" class="hidden mb-6 bg-red-900/30 border border-red-500/50 p-4 rounded-lg text-red-200 text-sm flex items-start gap-3">
+                            <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-400"></i>
+                            <span id="error-text">Error description here.</span>
+                        </div>
+
+                        <!-- DETAILED FORM (Hidden initially) -->
+                        <div id="report-form" class="space-y-4 opacity-50 pointer-events-none transition-opacity duration-500">
+                            
+                            <!-- AI Detected Category -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Issue Category (AI)</label>
+                                <input id="issue-category-input" type="text" value="Waiting..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none" readonly>
+                            </div>
+
+                            <!-- Location Details -->
+                            <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <h4 class="text-xs font-bold theme-text-primary text-blue-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-location-dot mr-1"></i> Location Details</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 uppercase mb-1">Address (GPS Auto-fill)</label>
+                                        <input id="input-address" type="text" placeholder="Fetching location..." class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 uppercase mb-1">Landmark / Location Name</label>
+                                        <input id="input-landmark" type="text" placeholder="e.g. Near City Hospital" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Details -->
+                            <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <h4 class="text-xs font-bold text-green-400 uppercase mb-3 flex items-center"><i class="fa-solid fa-user mr-1"></i> Your Details</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 uppercase mb-1">Name</label>
+                                        <input id="input-name" type="text" placeholder="Your Name" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 uppercase mb-1">Phone</label>
+                                        <input id="input-phone" type="tel" placeholder="+91..." class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
+                                <textarea id="input-desc" rows="2" placeholder="Describe the issue briefly..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none"></textarea>
+                            </div>
+
+                            <button onclick="submitReport()" id="submit-btn" class="w-full theme-bg-primary bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-900/50 transition transform active:scale-95">
+                                Submit Full Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: MY ACTIVITY / TRACKING -->
+                    <div id="tab-activity" class="hidden p-6 pb-20 min-h-full">
+                        <h4 class="text-white font-bold text-lg mb-4">My Reports</h4>
+                        
+                        <!-- Empty State -->
+                        <div id="empty-state" class="text-center py-10">
+                            <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa-regular fa-folder-open text-slate-500 text-2xl"></i>
+                            </div>
+                            <p class="text-slate-500 text-sm">No reports submitted yet.</p>
+                        </div>
+
+                        <!-- Ticket List -->
+                        <div id="citizen-ticket-list" class="space-y-4">
+                            <!-- Tickets injected via JS -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Navigation Bar -->
+                <div class="bg-slate-800 border-t border-slate-700 p-2 flex justify-around shrink-0 z-10">
+                    <button onclick="switchCitizenTab('report')" id="nav-report" class="flex flex-col items-center theme-text-primary text-blue-400 p-2 w-full transition">
+                        <i class="fa-solid fa-camera mb-1 text-lg"></i>
+                        <span class="text-[10px] font-bold uppercase">Report</span>
+                    </button>
+                    <button onclick="switchCitizenTab('activity')" id="nav-activity" class="flex flex-col items-center text-slate-500 hover:text-slate-300 p-2 w-full transition">
+                        <i class="fa-solid fa-clock-rotate-left mb-1 text-lg"></i>
+                        <span class="text-[10px] font-bold uppercase">My Activity</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW 2: AUTHORITY DASHBOARD -->
+            <div id="view-authority" class="hidden fade-in space-y-6">
+                <!-- Authority Dashboard Wrapper -->
+                <div id="authority-dashboard-main">
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold">Total Reports</p>
+                                <h3 class="text-2xl font-bold text-slate-800" id="stat-total">1,284</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-full theme-bg-light bg-blue-50 theme-text-primary text-blue-600 flex items-center justify-center"><i class="fa-solid fa-list"></i></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold">Pending Fix</p>
+                                <h3 class="text-2xl font-bold text-orange-600" id="stat-pending">42</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center"><i class="fa-regular fa-clock"></i></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold">SLA Breaches</p>
+                                <h3 class="text-2xl font-bold text-red-600">3</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold">Fake Reports</p>
+                                <h3 class="text-2xl font-bold text-slate-800">156</h3>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-ban"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Analytics Chart -->
+                        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-96 flex flex-col">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800">Department Performance</h3>
+                                <span class="text-xs bg-slate-100 px-2 py-1 rounded">Last 30 Days</span>
+                            </div>
+                            <div class="flex-1 relative w-full h-full">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Assigned Tasks (NEW) -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-96 flex flex-col">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800">Recent Complaints & Tasks</h3>
+                                <span class="theme-bg-light bg-blue-100 theme-text-primary text-blue-700 text-xs px-2 py-1 rounded-full font-bold">Live Feed</span>
+                            </div>
+                            <div class="overflow-y-auto flex-1 space-y-3 pr-2 custom-scrollbar" id="ticket-list">
+                                <!-- Tasks injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESOLUTION WORKSPACE (NEW PANEL) -->
+                <div id="authority-task-view" class="hidden bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden flex flex-col h-[700px]">
+                    <!-- Header -->
+                    <div class="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center">
+                        <button onclick="closeTaskView()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 text-sm font-bold">
+                            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-400 uppercase font-bold">Ticket ID</div>
+                            <div id="task-id-display" class="text-sm font-mono font-bold text-slate-800">#TKT-0000</div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <!-- Issue Summary -->
+                        <div class="flex flex-col md:flex-row gap-6 mb-8">
+                            <!-- Image -->
+                            <div class="w-full md:w-1/3">
+                                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Original Report</p>
+                                <div class="bg-slate-100 rounded-lg overflow-hidden h-48 border border-slate-200">
+                                    <img id="task-img-before" src="" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                            <!-- Details -->
+                            <div class="w-full md:w-2/3 space-y-4">
+                                <div>
+                                    <span id="task-badge" class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">High Severity</span>
+                                    <h2 id="task-title" class="text-2xl font-bold text-slate-800 mt-2">Pothole Repair</h2>
+                                    <p id="task-address" class="text-slate-500 text-sm mt-1"><i class="fa-solid fa-location-dot mr-1"></i> Location...</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
+                                    <div>
+                                        <p class="text-xs text-slate-400 uppercase font-bold">SLA Deadline</p>
+                                        <p id="task-deadline" class="text-red-600 font-bold text-lg">Due in 2 Hours</p>
+                                    </div>
+                                    <div class="h-10 w-10 bg-white rounded-full flex items-center justify-center border border-slate-200 text-slate-400">
+                                        <i class="fa-regular fa-clock"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resolution Form -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <h3 class="font-bold text-lg text-slate-800 mb-4">Update Status / Resolve</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Proof of Fix Upload -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Upload Proof of Fix</label>
+                                    <div class="relative group cursor-pointer" onclick="document.getElementById('resolve-file').click()">
+                                        <input type="file" id="resolve-file" class="hidden" accept="image/*" onchange="handleResolveUpload(event)">
+                                        <div id="resolve-placeholder" class="border-2 border-dashed border-slate-300 rounded-lg h-40 flex flex-col items-center justify-center text-slate-400 hover:border-blue-500 hover:text-blue-500 transition bg-slate-50">
+                                            <i class="fa-solid fa-camera text-2xl mb-2"></i>
+                                            <span class="text-xs">Click to upload After-Fix photo</span>
+                                        </div>
+                                        <img id="resolve-preview" class="hidden w-full h-40 object-cover rounded-lg border border-green-500">
+                                    </div>
+                                </div>
+
+                                <!-- Work Logs -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Resolution Notes</label>
+                                    <textarea id="resolve-notes" rows="5" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 outline-none" placeholder="Describe work done, materials used, etc."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="bg-slate-50 border-t border-slate-200 p-4 flex justify-end gap-3">
+                        <button onclick="closeTaskView()" class="px-6 py-2 rounded-lg text-slate-600 font-bold hover:bg-slate-200 transition">Cancel</button>
+                        <button onclick="submitResolution()" class="px-6 py-2 rounded-lg bg-green-600 text-white font-bold hover:bg-green-500 shadow-lg shadow-green-900/20 transition flex items-center gap-2">
+                            <i class="fa-solid fa-check"></i> Mark Resolved
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Future Roadmap Section -->
+    <section id="future" class="py-20 bg-slate-900 text-white">
+         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold">Future Development Roadmap</h2>
+                <p class="text-slate-400 mt-2">Where we are taking this project next.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold theme-text-primary text-blue-400 mb-2">Video Complaints</h4>
+                    <p class="text-sm text-slate-300">Support for short video uploads.</p>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-purple-400 mb-2">Deepfake Detection</h4>
+                    <p class="text-sm text-slate-300">Advanced AI capabilities to detect generative AI images.</p>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-green-400 mb-2">Predictive Analytics</h4>
+                    <p class="text-sm text-slate-300">Identify accident-prone zones and predict problem areas.</p>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-yellow-400 mb-2">Citizen Gamification</h4>
+                    <p class="text-sm text-slate-300">Reward points and leaderboards for active citizens.</p>
+                </div>
+                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-red-400 mb-2">Multilingual Support</h4>
+                    <p class="text-sm text-slate-300">Voice-based complaint submission in regional languages.</p>
+                </div>
+                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-indigo-400 mb-2">Smart Notifications</h4>
+                    <p class="text-sm text-slate-300">Real-time status alerts and SLA deadline reminders.</p>
+                </div>
+                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-pink-400 mb-2">NGO Collaboration</h4>
+                    <p class="text-sm text-slate-300">Allowing NGOs and CSR projects to adopt local problems.</p>
+                </div>
+                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-cyan-400 mb-2">IoT Integration</h4>
+                    <p class="text-sm text-slate-300">Integration with traffic sensors for fully automated smart governance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-white py-12 border-t border-slate-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-2xl font-bold mb-2">VisionCivic</h2>
+            <p class="text-slate-500 text-sm mb-8">A Project by Team <strong>HACKER SLAYER</strong></p>
+        </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-900 text-white px-6 py-4 rounded-lg shadow-2xl transform translate-y-full transition duration-300 z-50 flex items-center gap-3 border border-slate-700">
+        <div class="text-green-400"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <h4 class="font-bold text-sm">Success</h4>
+            <p class="text-xs text-slate-300" id="toast-message">Operation completed.</p>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; // API Key removed for privacy - Simulation Mode Active
+        
+        // --- Translations ---
+        const translations = {
+            en: {
+                nav_overview: "Overview", nav_how: "How It Works", nav_why: "Why Us?", nav_tech: "Google Tech Stack",
+                btn_demo: "Live Demo", hero_title_1: "Transforming Civic Participation into", hero_title_2: "Actionable Governance.",
+                hero_desc: "A computer vision-based infrastructure reporting system. We don't just collect complaints; we verify them with AI, enforce SLA accountability, and ensure resolution with \"Proof of Fix\" validation.",
+                btn_try_mvp: "Try the MVP", btn_how_works: "How It Works",
+                section_workflow_title: "Transparent Resolution Workflow", section_workflow_desc: "Track the journey of a complaint from upload to fix.",
+                section_diff_title: "How We Are Different", section_stack_title: "Built on Google Cloud",
+                demo_title: "Live MVP Demo", demo_desc: "Experience the report-to-resolution flow.",
+                view_citizen: "Citizen View", view_authority: "Official View"
+            },
+            hi: {
+                nav_overview: "अवलोकन", nav_how: "यह कैसे काम करता है", nav_why: "हम क्यों?", nav_tech: "Google टेक स्टैक",
+                btn_demo: "लाइव डेमो", hero_title_1: "नागरिक भागीदारी को बदलना", hero_title_2: "कार्रवाई योग्य शासन में।",
+                hero_desc: "एक कंप्यूटर विजन-आधारित बुनियादी ढांचा रिपोर्टिंग प्रणाली। हम केवल शिकायतें एकत्र नहीं करते; हम एआई के साथ उनकी पुष्टि करते हैं और समाधान सुनिश्चित करते हैं।",
+                btn_try_mvp: "एमवीपी आज़माएं", btn_how_works: "यह कैसे काम करता है",
+                section_workflow_title: "पारदर्शी समाधान कार्यप्रवाह", section_workflow_desc: "अपलोड से लेकर ठीक होने तक शिकायत की यात्रा ट्रैक करें।",
+                section_diff_title: "हम अलग कैसे हैं", section_stack_title: "Google Cloud पर निर्मित",
+                demo_title: "लाइव एमवीपी डेमो", demo_desc: "रिपोर्ट-टू-रिज़ॉल्यूशन प्रवाह का अनुभव करें।",
+                view_citizen: "नागरिक दृश्य", view_authority: "अधिकारी दृश्य"
+            },
+            ur: {
+                nav_overview: "جائزہ", nav_how: "یہ کیسے کام کرتا ہے", nav_why: "ہم کیوں؟", nav_tech: "گوگل ٹیک اسٹیک",
+                btn_demo: "لائیو ڈیمو", hero_title_1: "شہری شرکت کو تبدیل کرنا", hero_title_2: "قابل عمل حکمرانی میں۔",
+                hero_desc: "کمپیوٹر وژن پر مبنی بنیادی ڈھانچے کی رپورٹنگ کا نظام۔ ہم صرف شکایات جمع نہیں کرتے؛ ہم AI کے ساتھ ان کی تصدیق کرتے ہیں اور حل کو یقینی بناتے ہیں۔",
+                btn_try_mvp: "MVP آزمائیں", btn_how_works: "یہ کیسے کام کرتا ہے",
+                section_workflow_title: "شفاف ریزولوشن ورک فلو", section_workflow_desc: "اپ لوڈ سے لے کر درست کرنے تک شکایت کے سفر کو ٹریک کریں۔",
+                section_diff_title: "ہم کیسے مختلف ہیں", section_stack_title: "گوگل کلاؤڈ پر بنایا گیا",
+                demo_title: "لائیو MVP ڈیمو", demo_desc: "رپورٹ ٹو ریزولوشن کے بہاؤ کا تجربہ کریں۔",
+                view_citizen: "شہری منظر", view_authority: "سرکاری منظر"
+            },
+            ko: {
+                nav_overview: "개요", nav_how: "작동 방식", nav_why: "우리를 선택하는 이유", nav_tech: "Google 기술 스택",
+                btn_demo: "라이브 데모", hero_title_1: "시민 참여를", hero_title_2: "실행 가능한 거버넌스로 전환.",
+                hero_desc: "컴퓨터 비전 기반 인프라 보고 시스템. 우리는 단순히 불만 사항을 수집하는 것이 아니라 AI로 확인하고 해결을 보장합니다.",
+                btn_try_mvp: "MVP 체험하기", btn_how_works: "작동 방식",
+                section_workflow_title: "투명한 해결 워크플로우", section_workflow_desc: "업로드부터 수정까지 불만 사항의 여정을 추적하세요.",
+                section_diff_title: "우리의 차별점", section_stack_title: "Google Cloud 기반",
+                demo_title: "라이브 MVP 데모", demo_desc: "보고부터 해결까지의 흐름을 경험하세요.",
+                view_citizen: "시민 보기", view_authority: "공무원 보기"
+            },
+            ru: {
+                nav_overview: "Обзор", nav_how: "Как это работает", nav_why: "Почему мы?", nav_tech: "Стек Google",
+                btn_demo: "Живая демонстрация", hero_title_1: "Преобразование гражданского участия в", hero_title_2: "Эффективное управление.",
+                hero_desc: "Система отчетности об инфраструктуре на основе компьютерного зрения. Мы не просто собираем жалобы; мы проверяем их с помощью ИИ и гарантируем решение.",
+                btn_try_mvp: "Попробовать MVP", btn_how_works: "Как это работает",
+                section_workflow_title: "Прозрачный рабочий процесс", section_workflow_desc: "Отслеживайте путь жалобы от загрузки до исправления.",
+                section_diff_title: "Чем мы отличаемся", section_stack_title: "Построено на Google Cloud",
+                demo_title: "Живая демонстрация MVP", demo_desc: "Испытайте поток от отчета до решения.",
+                view_citizen: "Вид гражданина", view_authority: "Вид чиновника"
+            }
+        };
+
+        // --- Settings Logic ---
+        function toggleSettings() {
+            const menu = document.getElementById('settings-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => menu.classList.add('visible'), 10);
+            } else {
+                menu.classList.remove('visible');
+                setTimeout(() => menu.classList.add('hidden'), 200);
+            }
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('settings-menu');
+            const btn = document.querySelector('button[onclick="toggleSettings()"]');
+            if (!menu.contains(e.target) && !btn.contains(e.target) && !menu.classList.contains('hidden')) {
+                toggleSettings();
+            }
+        });
+
+        function changeLanguage(lang) {
+            const t = translations[lang];
+            if (!t) return;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+        }
+
+        function changeTheme(theme) {
+            // Reset common theme classes
+            const primaryBgElements = document.querySelectorAll('.theme-bg-primary');
+            const primaryTextElements = document.querySelectorAll('.theme-text-primary');
+            const lightBgElements = document.querySelectorAll('.theme-bg-light');
+            const heroBg = document.querySelector('.theme-hero-bg');
+            const heroAccent = document.querySelector('.theme-hero-accent');
+            const gradients = document.querySelectorAll('.theme-gradient-from'); 
+
+            // Define Theme Colors
+            let colors = {
+                primary: 'bg-blue-600',
+                primaryHover: 'hover:bg-blue-700',
+                text: 'text-blue-600',
+                lightBg: 'bg-blue-100', // lighter accent
+                lightText: 'text-blue-700',
+                gradientFrom: 'from-blue-600',
+                gradientTo: 'to-indigo-600',
+                heroBg: 'from-slate-50',
+                heroAccent: 'bg-blue-100/30'
+            };
+
+            if (theme === 'classic') {
+                colors = {
+                    primary: 'bg-slate-700',
+                    primaryHover: 'hover:bg-slate-800',
+                    text: 'text-slate-700',
+                    lightBg: 'bg-slate-200',
+                    lightText: 'text-slate-800',
+                    gradientFrom: 'from-slate-700',
+                    gradientTo: 'to-gray-900',
+                    heroBg: 'from-gray-100',
+                    heroAccent: 'bg-gray-300/30'
+                };
+            } else if (theme === 'pinkish') {
+                colors = {
+                    primary: 'bg-pink-500',
+                    primaryHover: 'hover:bg-pink-600',
+                    text: 'text-pink-500',
+                    lightBg: 'bg-pink-100',
+                    lightText: 'text-pink-700',
+                    gradientFrom: 'from-pink-500',
+                    gradientTo: 'to-rose-500',
+                    heroBg: 'from-rose-50',
+                    heroAccent: 'bg-pink-200/30'
+                };
+            }
+
+            // Helper to swap color classes
+            const swapClasses = (el, prefix, newColor) => {
+                // Remove existing color classes of that prefix type
+                el.classList.forEach(cls => {
+                    if (cls.startsWith(prefix) && (cls.includes('blue') || cls.includes('slate') || cls.includes('pink') || cls.includes('gray') || cls.includes('indigo') || cls.includes('rose'))) {
+                        el.classList.remove(cls);
+                    }
+                });
+                el.classList.add(newColor);
+            };
+
+            primaryBgElements.forEach(el => {
+                swapClasses(el, 'bg-', colors.primary);
+                swapClasses(el, 'hover:bg-', colors.primaryHover);
+            });
+
+            primaryTextElements.forEach(el => swapClasses(el, 'text-', colors.text));
+            
+            lightBgElements.forEach(el => {
+                swapClasses(el, 'bg-', colors.lightBg);
+                // Also update text color inside light bg if needed (usually matches lightText)
+                if (el.classList.contains('theme-text-primary')) {
+                     swapClasses(el, 'text-', colors.lightText);
+                }
+            });
+
+            // Gradient Text
+            const gradientTitle = document.querySelector('[data-i18n="hero_title_2"]');
+            if(gradientTitle) {
+                swapClasses(gradientTitle, 'from-', colors.gradientFrom);
+                swapClasses(gradientTitle, 'to-', colors.gradientTo);
+            }
+
+            // Hero Section Backgrounds
+            if(heroBg) swapClasses(heroBg, 'from-', colors.heroBg);
+            if(heroAccent) swapClasses(heroAccent, 'bg-', colors.heroAccent);
+        }
+
+        // --- Global Simulation State ---
+        let currentAnalysisResult = {};
+        let myTickets = []; // Store citizen's submitted tickets
+        let rawBase64Image = "";
+        let demoStep = 0; // Tracks sequence of uploads
+        
+        // Mock Tasks for Officer
+        const mockTasks = [
+            { id: "8921", type: "Pothole", loc: "Main St, Sector 4", severity: "High", due: "2h", img: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=300", status: "Verified" },
+            { id: "8920", type: "Garbage", loc: "Market Road", severity: "Medium", due: "5h", img: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&q=80&w=300", status: "In Progress" },
+            { id: "8918", type: "Waterlogging", loc: "Underpass 2", severity: "High", due: "Overdue", img: "https://plus.unsplash.com/premium_photo-1664303847960-586318f59035?auto=format&fit=crop&q=80&w=300", status: "Open" }
+        ];
+
+        // --- Navigation Logic ---
+        function scrollToDemo() {
+            document.getElementById('dashboard-demo').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function switchView(view) {
+            const citizenBtn = document.getElementById('btn-citizen');
+            const authBtn = document.getElementById('btn-authority');
+            const citizenView = document.getElementById('view-citizen');
+            const authView = document.getElementById('view-authority');
+
+            if(view === 'citizen') {
+                citizenBtn.className = "px-6 py-2 rounded-md text-sm font-medium bg-slate-100 text-slate-900 shadow-inner transition";
+                authBtn.className = "px-6 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-900 transition";
+                citizenView.classList.remove('hidden');
+                authView.classList.add('hidden');
+            } else {
+                authBtn.className = "px-6 py-2 rounded-md text-sm font-medium theme-bg-primary bg-blue-600 text-white shadow-sm transition";
+                citizenBtn.className = "px-6 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-slate-900 transition";
+                authView.classList.remove('hidden');
+                citizenView.classList.add('hidden');
+                renderChart();
+                renderAuthorityTasks(); // Load tasks
+            }
+        }
+
+        function switchCitizenTab(tab) {
+            const reportTab = document.getElementById('tab-report');
+            const activityTab = document.getElementById('tab-activity');
+            const navReport = document.getElementById('nav-report');
+            const navActivity = document.getElementById('nav-activity');
+
+            if(tab === 'report') {
+                reportTab.classList.remove('hidden');
+                activityTab.classList.add('hidden');
+                navReport.classList.add('theme-text-primary', 'text-blue-400');
+                navReport.classList.remove('text-slate-500');
+                navActivity.classList.add('text-slate-500');
+                navActivity.classList.remove('theme-text-primary', 'text-blue-400');
+            } else {
+                activityTab.classList.remove('hidden');
+                reportTab.classList.add('hidden');
+                navActivity.classList.add('theme-text-primary', 'text-blue-400');
+                navActivity.classList.remove('text-slate-500');
+                navReport.classList.add('text-slate-500');
+                navReport.classList.remove('theme-text-primary', 'text-blue-400');
+                renderMyTickets();
+            }
+        }
+
+        // --- Authority Task Management Logic ---
+
+        function renderAuthorityTasks() {
+            const listEl = document.getElementById('ticket-list');
+            listEl.innerHTML = mockTasks.map(task => {
+                let dueColor = "text-orange-600";
+                let dueBg = "bg-orange-50";
+                if(task.due.includes("Overdue")) { dueColor = "text-red-600"; dueBg = "bg-red-50"; }
+                
+                let statusBadgeColor = "bg-slate-200 text-slate-700";
+                if(task.status === "Verified") statusBadgeColor = "bg-purple-100 text-purple-700";
+                if(task.status === "In Progress") statusBadgeColor = "bg-blue-100 text-blue-700";
+                if(task.status === "Open") statusBadgeColor = "bg-green-100 text-green-700";
+
+                // Progress Bar Width logic
+                let progressWidth = "25%";
+                if(task.status === "Verified") progressWidth = "50%";
+                if(task.status === "In Progress") progressWidth = "75%";
+                
+                return `
+                <div class="p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition group flex gap-3 items-start bg-white shadow-sm mb-3">
+                    <img src="${task.img}" class="w-20 h-20 rounded-lg object-cover bg-slate-200 border border-slate-200">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-slate-500">#TKT-${task.id}</span>
+                                <h4 class="text-sm font-bold text-slate-800">${task.type}</h4>
+                            </div>
+                            <span class="text-[10px] font-bold ${dueColor} ${dueBg} px-2 py-1 rounded-full border border-orange-100">Due: ${task.due}</span>
+                        </div>
+                        
+                        <p class="text-xs text-slate-500 mb-3 flex items-center gap-1"><i class="fa-solid fa-location-dot"></i> ${task.loc}</p>
+                        
+                        <!-- Tracking System for Officials -->
+                        <div class="mb-3">
+                            <div class="flex justify-between items-end mb-1">
+                                <span class="text-[10px] font-bold uppercase text-slate-400">Tracking Status</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${statusBadgeColor}">${task.status}</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5">
+                                <div class="theme-bg-primary bg-blue-600 h-1.5 rounded-full" style="width: ${progressWidth}"></div>
+                            </div>
+                        </div>
+
+                        <button onclick="openTaskView('${task.id}')" class="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg hover:bg-slate-700 w-full font-bold transition flex items-center justify-center gap-2">
+                            View & Resolve <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                `
+            }).join('');
+        }
+
+        let currentTaskId = null;
+
+        function openTaskView(id) {
+            const task = mockTasks.find(t => t.id === id);
+            if(!task) return;
+
+            currentTaskId = id;
+            document.getElementById('authority-dashboard-main').classList.add('hidden');
+            document.getElementById('authority-task-view').classList.remove('hidden');
+
+            // Populate Data
+            document.getElementById('task-id-display').innerText = `#TKT-${task.id}`;
+            document.getElementById('task-title').innerText = `${task.type} Repair`;
+            document.getElementById('task-address').innerText = task.loc;
+            document.getElementById('task-img-before').src = task.img;
+            
+            // Deadline Logic
+            const dlEl = document.getElementById('task-deadline');
+            if(task.due.includes("Overdue")) {
+                dlEl.innerText = "Overdue by 2 Hours";
+                dlEl.className = "text-red-600 font-bold text-lg";
+            } else {
+                dlEl.innerText = `Due in ${task.due}`;
+                dlEl.className = "text-orange-600 font-bold text-lg";
+            }
+
+            // Reset Form
+            document.getElementById('resolve-preview').classList.add('hidden');
+            document.getElementById('resolve-placeholder').classList.remove('hidden');
+            document.getElementById('resolve-notes').value = '';
+            document.getElementById('resolve-file').value = '';
+        }
+
+        function closeTaskView() {
+            document.getElementById('authority-task-view').classList.add('hidden');
+            document.getElementById('authority-dashboard-main').classList.remove('hidden');
+        }
+
+        function handleResolveUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('resolve-preview').src = e.target.result;
+                    document.getElementById('resolve-preview').classList.remove('hidden');
+                    document.getElementById('resolve-placeholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitResolution() {
+            const notes = document.getElementById('resolve-notes').value;
+            const file = document.getElementById('resolve-file').files[0];
+
+            if(!notes || !document.getElementById('resolve-preview').src) {
+                alert("Please upload proof and add notes."); // In production use toast
+                return;
+            }
+
+            // Simulate API Call
+            const btn = document.querySelector('#authority-task-view button.bg-green-600');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Saving...';
+
+            setTimeout(() => {
+                showToast(`Ticket #${currentTaskId} Resolved Successfully!`);
+                btn.innerHTML = originalText;
+                closeTaskView();
+                
+                // Update Citizen Data (Simulated DB Update)
+                const citizenTicket = myTickets.find(t => t.id == currentTaskId);
+                if(citizenTicket) {
+                    citizenTicket.status = "Resolved";
+                    citizenTicket.statusColor = "green";
+                }
+
+                // Remove from Authority List
+                const idx = mockTasks.findIndex(t => t.id === currentTaskId);
+                if(idx > -1) mockTasks.splice(idx, 1);
+                renderAuthorityTasks();
+                
+                // Update stats
+                document.getElementById('stat-pending').innerText = parseInt(document.getElementById('stat-pending').innerText) - 1;
+                
+                // Notify
+                setTimeout(() => showToast("Citizen notified of resolution."), 800);
+
+            }, 1000);
+        }
+
+        // --- Demo Simulation Logic ---
+
+        function triggerScan() {
+            document.getElementById('file-upload').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const result = e.target.result;
+                    document.getElementById('preview-img').src = result;
+                    // Extract clean base64 string
+                    rawBase64Image = result.split(',')[1];
+                    prepareVerification(); 
+                };
+                reader.readAsDataURL(file);
+            }
+            event.target.value = '';
+        }
+
+        function prepareVerification() {
+            document.getElementById('upload-placeholder').classList.add('hidden');
+            document.getElementById('image-preview').classList.remove('hidden');
+            document.getElementById('verify-section').classList.remove('hidden');
+            document.getElementById('analysis-box').classList.add('hidden');
+            document.getElementById('error-box').classList.add('hidden');
+            document.getElementById('ai-tags').classList.add('hidden');
+            
+            // Reset status
+            ['status-deepfake', 'status-location', 'status-issue'].forEach(id => {
+                document.getElementById(id).innerHTML = 'Waiting...';
+                document.getElementById(id).className = 'text-xs font-bold text-slate-500';
+            });
+        }
+
+        async function analyzeImageWithGemini(base64Image) {
+            if (!apiKey) {
+                console.warn("No API Key provided. Switching to Simulation Mode.");
+                return null;
+            }
+
+            const prompt = `Analyze this image for civic complaints. 
+            1. Check if the image looks like a real, unedited photo (not AI-generated, not a screenshot, not a deepfake). 
+            2. Identify the primary civic issue (e.g., Pothole, Garbage Overflow, Waterlogging, Broken Streetlight, Illegal Parking, or None).
+            3. Assess the severity (HIGH, MEDIUM, LOW).
+            4. Check if the image appears to be taken outdoors (street, road, public area) vs indoors.
+            
+            Return ONLY a JSON object with this structure:
+            {
+                "is_real": boolean,
+                "issue_type": "string",
+                "severity": "string",
+                "is_outdoor": boolean
+            }`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                return JSON.parse(text);
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                return null;
+            }
+        }
+
+        function getSimulatedAnalysis() {
+            // Scenarios with simulated Address data
+            const scenarios = [
+                { is_real: true, issue_type: "Garbage Overflow", severity: "MEDIUM", is_outdoor: true, color: "orange" },
+                { is_real: true, issue_type: "Pothole", severity: "HIGH", is_outdoor: true, color: "blue" },
+                { is_real: true, issue_type: "Waterlogging", severity: "HIGH", is_outdoor: true, color: "blue" },
+                { is_real: false, issue_type: "Fake", severity: "N/A", is_outdoor: false, color: "red" },
+                { is_real: true, issue_type: "Indoor", severity: "N/A", is_outdoor: false, color: "red" } // Invalid location
+            ];
+
+            const scenario = scenarios[demoStep % scenarios.length];
+            demoStep++;
+            return scenario;
+        }
+
+        async function triggerAnalysis() {
+            const verifyBtn = document.getElementById('verify-section');
+            const analysisBox = document.getElementById('analysis-box');
+            const scanLine = document.getElementById('scanner');
+            
+            verifyBtn.classList.add('hidden');
+            analysisBox.classList.remove('hidden');
+            scanLine.style.display = 'block';
+
+            // --- Step 1: Deepfake Check (Call API) ---
+            document.getElementById('status-deepfake').innerHTML = '<span class="theme-text-primary text-blue-400 animate-pulse">Scanning Pixels...</span>';
+            
+            let result = await analyzeImageWithGemini(rawBase64Image);
+            
+            if (!result) {
+                // Fallback to simulation if API fails or no key
+                result = getSimulatedAnalysis();
+                // Add delay for realism
+                await new Promise(r => setTimeout(r, 1500));
+            }
+
+            currentAnalysisResult = result;
+
+            if (!result.is_real) {
+                document.getElementById('status-deepfake').innerHTML = '<span class="text-red-500"><i class="fa-solid fa-circle-xmark"></i> Fake Detected</span>';
+                failSimulation("Deepfake Detected", "AI analysis indicates this image is computer generated. Submission rejected.");
+                return;
+            } else {
+                document.getElementById('status-deepfake').innerHTML = '<span class="text-green-500"><i class="fa-solid fa-circle-check"></i> Real Image</span>';
+                // Proceed to Step 2
+                runLocationCheck();
+            }
+        }
+
+        function runLocationCheck() {
+            // --- Step 2: Location Check (Using Gemini Outdoor Check) ---
+            document.getElementById('status-location').innerHTML = '<span class="theme-text-primary text-blue-400 animate-pulse">Checking Context...</span>';
+            
+            setTimeout(() => {
+                if (!currentAnalysisResult.is_outdoor) {
+                    document.getElementById('status-location').innerHTML = '<span class="text-red-500"><i class="fa-solid fa-circle-xmark"></i> Invalid Location</span>';
+                    failSimulation("Location Mismatch", "Image appears to be indoor or invalid for civic reporting. Please upload a street photo.");
+                    return;
+                } else {
+                    document.getElementById('status-location').innerHTML = '<span class="text-green-500"><i class="fa-solid fa-circle-check"></i> Verified</span>';
+                    // Proceed to Step 3
+                    runIssueDetection();
+                }
+            }, 1000);
+        }
+
+        function runIssueDetection() {
+             // --- Step 3: Issue Detection (Using Gemini Result) ---
+             document.getElementById('status-issue').innerHTML = '<span class="theme-text-primary text-blue-400 animate-pulse">Classifying...</span>';
+             
+             setTimeout(() => {
+                if (currentAnalysisResult.issue_type === 'None' || currentAnalysisResult.issue_type === 'Indoor') {
+                     document.getElementById('status-issue').innerHTML = '<span class="text-red-500"><i class="fa-solid fa-circle-xmark"></i> No Issue</span>';
+                     failSimulation("No Issue Found", "AI could not identify a valid civic issue (Pothole, Garbage, etc.) in this image.");
+                } else {
+                    document.getElementById('status-issue').innerHTML = '<span class="text-green-500"><i class="fa-solid fa-circle-check"></i> Done</span>';
+                    finalizeSuccess();
+                }
+             }, 800);
+        }
+
+        function failSimulation(title, msg) {
+            document.getElementById('scanner').style.display = 'none';
+            const errorBox = document.getElementById('error-box');
+            errorBox.classList.remove('hidden');
+            errorBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation mt-0.5 text-red-400"></i><div><strong>${title}</strong><br>${msg}</div>`;
+            
+            // Show reset button only on failure
+            document.getElementById('reset-btn').classList.remove('hidden');
+            const btn = document.getElementById('submit-btn');
+            btn.innerHTML = 'Retry';
+            btn.onclick = resetDemo;
+        }
+
+        function finalizeSuccess() {
+            const scanLine = document.getElementById('scanner');
+            const aiTags = document.getElementById('ai-tags');
+            const tagsContainer = document.getElementById('tags-container');
+            const form = document.getElementById('report-form');
+            const issueInput = document.getElementById('issue-category-input');
+
+            scanLine.style.display = 'none';
+            aiTags.classList.remove('hidden');
+            aiTags.classList.add('fade-in');
+
+            // Define color based on severity
+            let color = 'blue';
+            if (currentAnalysisResult.severity === 'HIGH') color = 'red';
+            if (currentAnalysisResult.severity === 'MEDIUM') color = 'orange';
+
+            tagsContainer.innerHTML = `
+                <span class="bg-${color}-600 text-white text-xs px-2 py-1 rounded font-bold">Severity: ${currentAnalysisResult.severity}</span>
+                <span class="theme-bg-primary bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">${currentAnalysisResult.issue_type}</span>
+            `;
+
+            // Auto-fill form
+            issueInput.value = currentAnalysisResult.issue_type;
+            
+            // Generate random address for demo since we can't reverse geocode without API key
+            const addresses = ["Sector 14, Main Market Road", "G.T. Road, Near Block B", "Civil Lines, Lane 4", "Station Road, Opp. Park"];
+            document.getElementById('input-address').value = addresses[Math.floor(Math.random() * addresses.length)];
+            
+            // Reveal full form
+            form.classList.remove('opacity-50', 'pointer-events-none');
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function submitReport() {
+            const btn = document.getElementById('submit-btn');
+            const name = document.getElementById('input-name').value;
+            const phone = document.getElementById('input-phone').value;
+            
+            if(!name || !phone) {
+                // Simple validation for demo
+                document.getElementById('input-name').classList.add('border-red-500');
+                document.getElementById('input-phone').classList.add('border-red-500');
+                showToast('Please fill in required details.');
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
+            
+            setTimeout(() => {
+                const ticketId = Math.floor(Math.random() * 9000) + 1000;
+                
+                // Add to My Activity
+                myTickets.unshift({
+                    id: ticketId,
+                    type: currentAnalysisResult.issue_type,
+                    address: document.getElementById('input-address').value,
+                    date: "Just Now",
+                    status: "Submitted",
+                    statusColor: "blue"
+                });
+
+                showToast(`Success! Ticket #${ticketId} Created.`);
+                
+                // Add to Authority List as a new Task
+                mockTasks.unshift({ 
+                    id: ticketId.toString(), 
+                    type: currentAnalysisResult.issue_type, 
+                    loc: document.getElementById('input-address').value, 
+                    severity: currentAnalysisResult.severity, 
+                    due: "24h", // Default deadline
+                    img: document.getElementById('preview-img').src,
+                    status: "Open"
+                });
+
+                // Reset UI
+                btn.innerHTML = 'Submit Full Report';
+                resetDemo(); // Reset the form view
+                
+                // Switch to activity tab
+                switchCitizenTab('activity');
+                
+            }, 1500);
+        }
+
+        function renderMyTickets() {
+            const container = document.getElementById('citizen-ticket-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            if(myTickets.length === 0) {
+                emptyState.classList.remove('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = myTickets.map(ticket => {
+                // Determine step colors
+                const isVerified = ticket.status === "Verified" || ticket.status === "In Progress" || ticket.status === "Resolved" || ticket.status === "Open"; // Simulating auto-verify for Open too for demo flow
+                const isResolved = ticket.status === "Resolved";
+                
+                // Colors should ideally follow theme, but for specific status colors (green/red) we keep them semantic
+                const step1Color = "theme-bg-primary bg-blue-500 text-white border-transparent";
+                const step2Color = isVerified ? "theme-bg-primary bg-blue-500 text-white border-transparent" : "bg-slate-700 border-slate-600 text-slate-500";
+                const step3Color = isResolved ? "bg-green-500 text-white border-green-500" : "bg-slate-700 border-slate-600 text-slate-500";
+                
+                const barWidth = isResolved ? "100%" : (isVerified ? "66%" : "33%");
+                const barColor = isResolved ? "bg-green-500" : "bg-blue-500 theme-bg-primary";
+
+                return `
+                <div class="bg-slate-800 rounded-xl p-4 border border-slate-700 fade-in">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-mono text-slate-500">#TKT-${ticket.id}</span>
+                        <span class="bg-${ticket.statusColor}-900 text-${ticket.statusColor}-300 text-[10px] px-2 py-1 rounded-full uppercase font-bold">${ticket.status}</span>
+                    </div>
+                    <h4 class="text-white font-bold text-sm mb-1">${ticket.type} Issue</h4>
+                    <p class="text-slate-400 text-xs mb-3"><i class="fa-solid fa-location-dot mr-1"></i> ${ticket.address}</p>
+                    
+                    <!-- Updated Stepper Panel -->
+                    <div class="mt-4 bg-slate-900/50 rounded-lg p-3 relative overflow-hidden">
+                        <div class="flex justify-between items-center relative z-10">
+                            <!-- Step 1 -->
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 ${step1Color}">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                                <span class="text-[10px] text-slate-400">Sent</span>
+                            </div>
+                            <!-- Step 2 -->
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-colors duration-500 ${step2Color}">
+                                    ${isVerified ? '<i class="fa-solid fa-check"></i>' : '2'}
+                                </div>
+                                <span class="text-[10px] ${isVerified ? 'theme-text-primary text-blue-400 font-bold' : 'text-slate-500'}">Verified</span>
+                            </div>
+                            <!-- Step 3 -->
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-colors duration-500 ${step3Color}">
+                                    ${isResolved ? '<i class="fa-solid fa-check"></i>' : '3'}
+                                </div>
+                                <span class="text-[10px] ${isResolved ? 'text-green-400 font-bold' : 'text-slate-500'}">Resolved</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Connecting Bar Background -->
+                        <div class="absolute top-6 left-5 right-5 h-0.5 bg-slate-700 -z-0"></div>
+                        <!-- Active Bar -->
+                        <div class="absolute top-6 left-5 h-0.5 transition-all duration-1000 ${barColor} -z-0" style="width: calc(${barWidth} - 2.5rem)"></div>
+                    </div>
+                    
+                    ${isResolved ? `
+                    <div class="mt-3 bg-green-900/20 border border-green-900/50 rounded p-2 flex items-start gap-2">
+                        <i class="fa-solid fa-circle-check text-green-500 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-green-200 font-bold">Problem Fixed!</p>
+                            <p class="text-[10px] text-green-400/70">Official has verified the resolution.</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                `;
+            }).join('');
+        }
+
+        function resetDemo() {
+            // Clears form and resets state for next report
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            document.getElementById('image-preview').classList.add('hidden');
+            document.getElementById('verify-section').classList.add('hidden');
+            document.getElementById('analysis-box').classList.add('hidden');
+            document.getElementById('error-box').classList.add('hidden');
+            document.getElementById('ai-tags').classList.add('hidden');
+            document.getElementById('report-form').classList.add('opacity-50', 'pointer-events-none');
+            
+            // Clear inputs
+            document.getElementById('input-address').value = '';
+            document.getElementById('input-landmark').value = '';
+            document.getElementById('input-desc').value = '';
+            document.getElementById('input-name').classList.remove('border-red-500');
+            document.getElementById('input-phone').classList.remove('border-red-500');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-full');
+            setTimeout(() => {
+                toast.classList.add('translate-y-full');
+            }, 4000);
+        }
+
+        let chartInitialized = false;
+        function renderChart() {
+            if (chartInitialized) return;
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Roads', 'Sanitation', 'Water', 'Electric', 'Parks'],
+                    datasets: [{
+                        label: 'Open Tickets',
+                        data: [12, 19, 3, 5, 2],
+                        backgroundColor: '#3B82F6',
+                        borderRadius: 4
+                    }, {
+                        label: 'Resolved (24h)',
+                        data: [20, 15, 8, 10, 5],
+                        backgroundColor: '#22c55e',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+            chartInitialized = true;
+        }
+    </script>
+</body>
+</html>
